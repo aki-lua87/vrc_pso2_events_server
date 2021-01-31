@@ -18,10 +18,28 @@ textRGB = (0, 0, 0)
 
 s3 = boto3.resource('s3')
 
-s3_bucket = 'net.akakitune87.public'
+s3_bucket = os.environ['S3_PUBLIC_BUCKET']
 s3_path = 'pso2events.mp4'
-imege_path = 'pso2events.png'
-video_path = 'pso2events.mp4'
+imege_path = "/tmp/pso2events.png"
+video_path = "/tmp/pso2events.mp4"
+
+# Lambdaエントリポイント
+def main(event, context):
+    # 実行時間計測
+    start = time.time()
+
+    # 画像を生成
+    create_picture()
+
+    # 画像から動画を作成
+    create_one_frame_video(imege_path,video_path)
+    
+    # 動画をS3に保存
+    put_s3(s3_bucket,s3_path,video_path)
+
+    # 実行時間出力
+    elapsed_time = time.time() - start
+    print ('{0}'.format(elapsed_time) + '[sec]')
 
 # 本日の緊急クエストを取得しdictで返す
 def get_pso2_events(yyyymmdd):
@@ -115,21 +133,3 @@ def create_picture():
     
     # 画像を保存
     image.save(imege_path)
-
-# エントリポイント
-if __name__ == '__main__':
-    # 実行時間計測
-    start = time.time()
-
-    # 画像を生成
-    create_picture()
-
-    # 画像から動画を作成
-    create_one_frame_video(imege_path,video_path)
-    
-    # 動画をS3に保存
-    put_s3(s3_bucket,s3_path,video_path)
-
-    # 実行時間出力
-    elapsed_time = time.time() - start
-    print ('{0}'.format(elapsed_time) + '[sec]')
