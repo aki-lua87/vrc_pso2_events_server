@@ -21,7 +21,7 @@ var/
 
 *.png
 *.mp4
-test.py
+_test.py
 font/
 node_modules/
 .env
