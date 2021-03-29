@@ -46,6 +46,7 @@ def get_pso2_events(yyyymmdd):
     url = 'https://pso2.akakitune87.net/api/emergency'
     data = {
         'EventDate':yyyymmdd,
+        'EventType':'緊急'
     }
     headers = {
         'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ def create_picture():
         line_pos = line_pos + 60
         time = str(events_data1[i]['Hour']).zfill(2) + ':' + str(events_data1[i]['Minute']).zfill(2)
         event_name = events_data1[i]['EventName']
-        text = time + '       ' + event_name
+        text = time + '   ' + event_name
         add_text_to_image(image,text,'./font/f910-shin-comic-2.04.otf',56,textRGB,line_pos,100,20000)
 
     # 明日の緊急
