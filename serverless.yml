@@ -38,10 +38,24 @@ functions:
   main:
     handler: handler.main
     memorySize: 3008
-    timeout: 30
+    timeout: 100
     environment:
       S3_PUBLIC_BUCKET: ${self:custom.s3_bucket}
     events:
       - schedule: cron(31 7 ? * WED *)
       - schedule: cron(6 15 ? * * *)
-    
+  video:
+    handler: video_list.main
+    memorySize: 3008
+    timeout: 100
+    environment:
+      S3_PUBLIC_BUCKET: ${self:custom.s3_bucket}
+    events:
+      - schedule:
+        rate: cron(6 15 ? * * *)
+        input:
+          pathParameters: 
+            user_id: 1e190f4d
+      - http:
+          path: /user/{user_id}/create/video
+          method: get
