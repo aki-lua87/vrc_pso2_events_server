@@ -17,10 +17,7 @@ height = 1080
 textRGB = (0, 0, 0)
 
 s3 = boto3.resource('s3')
-
 s3_bucket = os.environ['S3_PUBLIC_BUCKET']
-
-s3_path = 'video.mp4'
 
 # ローカル時にはプレフィックスに"."を付けてもろて
 locate_setting = ''
@@ -31,11 +28,21 @@ api_url = "https://vrc.akakitune87.net"
 # Lambdaエントリポイント
 def main(event, context):
     user_id = event['pathParameters'].get('user_id')
+    queryStringParameters = event.get('queryStringParameters')
+    create_type = ''
+    if not queryStringParameters == None:
+        create_type = queryStringParameters.get('type')
     # 実行時間計測
     start = time.time()
 
     # 画像を生成
-    create_picture(user_id)
+    if create_type == 'list':
+        video_list = get_video_list_current(user_id)
+        s3_path = 'current.mp4'
+    else:
+        video_list = get_video_list(user_id)
+        s3_path = 'video.mp4'
+    create_picture(user_id,video_list)
 
     # 画像から動画を作成
     create_one_frame_video(imege_path,video_path)
@@ -46,9 +53,14 @@ def main(event, context):
     # 実行時間出力
     elapsed_time = time.time() - start
     print ('{0}'.format(elapsed_time) + '[sec]')
+    body = getVideo(f'{user_id}/{s3_path}',s3_bucket)
     return {
             'statusCode': 200,
-            'body': json.dumps( {} )
+            'headers': { 
+                # "Content-type": "video/mp4",
+                "Access-Control-Allow-Origin": "*"
+            },
+            'body': 'OK'
     }
 
 def create_one_frame_video(input_imege,output_video):
@@ -81,15 +93,13 @@ def put_s3(bucket_name,path,file,user_id):
     bucket = s3.Bucket(bucket_name)
     bucket.upload_file(file, user_id+'/'+path)
 
-def create_picture(user_id):
+def create_picture(user_id,video_list):
     image = Image.open('./images/template169.jpg')
 
     header1 = '現在のプレイリストの動画'
 
     line_pos = 5
     add_text_to_image(image,header1,'./font/f910-shin-comic-2.04.otf',75,textRGB,line_pos,125,20000)
-
-    video_list = get_video_list(user_id)
     if len(video_list) == 0:
         print('[INFO] No Video data')
         return
@@ -100,7 +110,7 @@ def create_picture(user_id):
     for i in range(len(video_list)):
         line_pos = line_pos + 55
         description = video_list[i]['description']
-        text =  '・' + description
+        text =  f'{i+1}: ' + description
         # 文字数が横枠超えそうなとき(かなり横着だけどこれ以上越えるのはもう知らん)
         if len(text) > str_max_count:
             add_text_to_image(image,text[:str_max_count],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
@@ -121,6 +131,16 @@ def get_video_list(user_id):
     print(body)
     return json.loads(body)
 
+def get_video_list_current(user_id):
+    path = f'/users/{user_id}/video/current/list'
+    url = api_url +path
+    req = urllib.request.Request(url)
+    with urllib.request.urlopen(req) as res:
+        body = res.read().decode('utf-8')
+    print(body)
+    return json.loads(body)
 
-# ローカルデバッグ用
-# main(None,None)
+def getVideo(path,bucket_name):
+    with open(video_path, 'rb') as f:
+        res= f.read()
+    return res

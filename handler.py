@@ -99,7 +99,7 @@ def tommorow_yyyymmdd():
 def create_picture():
     image = Image.open('./images/template.jpg')
 
-    header1 = 'PSO2イベントリスト'
+    header1 = 'PSO2緊急リスト'
 
     line_pos = 5
     add_text_to_image(image,header1,'./font/f910-shin-comic-2.04.otf',89,textRGB,line_pos,125,20000)
