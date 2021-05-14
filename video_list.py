@@ -8,6 +8,7 @@ import json
 import datetime
 from PIL import Image,ImageFont, ImageDraw
 import boto3
+import base64
 
 # メタ情報
 frame_size = -1
@@ -27,19 +28,21 @@ api_url = "https://vrc.akakitune87.net"
 
 # Lambdaエントリポイント
 def main(event, context):
-    user_id = event['pathParameters'].get('user_id')
-    queryStringParameters = event.get('queryStringParameters')
-    create_type = ''
-    if not queryStringParameters == None:
-        create_type = queryStringParameters.get('type')
+    print(event)
+    user_id = event['path'].get('user_id')
+    create_type = event['path'].get('type')
+    # queryStringParameters = event.get('queryStringParameters')
+    # create_type = ''
+    # if not queryStringParameters == None:
+    #     create_type = queryStringParameters.get('type')
     # 実行時間計測
     start = time.time()
 
     # 画像を生成
-    if create_type == 'list':
+    if create_type == 'current':
         video_list = get_video_list_current(user_id)
         s3_path = 'current.mp4'
-    else:
+    elif create_type == 'list':
         video_list = get_video_list(user_id)
         s3_path = 'video.mp4'
     create_picture(user_id,video_list)
@@ -53,15 +56,17 @@ def main(event, context):
     # 実行時間出力
     elapsed_time = time.time() - start
     print ('{0}'.format(elapsed_time) + '[sec]')
-    body = getVideo(f'{user_id}/{s3_path}',s3_bucket)
-    return {
-            'statusCode': 200,
-            'headers': { 
-                # "Content-type": "video/mp4",
-                "Access-Control-Allow-Origin": "*"
-            },
-            'body': 'OK'
-    }
+    body = getLocalVideo()
+    # body = getS3Video(f'{user_id}/{s3_path}',s3_bucket)
+    return base64.b64encode(body)
+    # {
+    #         'statusCode': 200,
+    #         'headers': { 
+    #             "Content-type": "text/html",
+    #             "Access-Control-Allow-Origin": "*"
+    #         },
+    #         'body': body
+    # }
 
 def create_one_frame_video(input_imege,output_video):
     # OpenCV設定
@@ -105,8 +110,8 @@ def create_picture(user_id,video_list):
         return
     print(video_list)
     line_pos = line_pos + 20
-    font_size = 40
-    str_max_count = 45
+    font_size = 36
+    str_max_count = 50
     for i in range(len(video_list)):
         line_pos = line_pos + 55
         description = video_list[i]['description']
@@ -114,7 +119,7 @@ def create_picture(user_id,video_list):
         # 文字数が横枠超えそうなとき(かなり横着だけどこれ以上越えるのはもう知らん)
         if len(text) > str_max_count:
             add_text_to_image(image,text[:str_max_count],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
-            line_pos = line_pos + 40
+            line_pos = line_pos + 36
             add_text_to_image(image,'    '+text[str_max_count:],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
             continue
         add_text_to_image(image,text,'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
@@ -140,7 +145,15 @@ def get_video_list_current(user_id):
     print(body)
     return json.loads(body)
 
-def getVideo(path,bucket_name):
+def getLocalVideo():
     with open(video_path, 'rb') as f:
         res= f.read()
     return res
+
+def getS3Video(path,bucket_name):
+    print('getS3Video',path,bucket_name)
+    bucket = s3.Bucket(bucket_name)
+    obj = bucket.Object(path)
+    response = obj.get()    
+    body = response['Body'].read()
+    return body

@@ -57,5 +57,14 @@ functions:
           pathParameters: 
             user_id: 1e190f4d
       - http:
-          path: /user/{user_id}/create/video
+          # 非Lambda proxy
+          integration: lambda
+          path: /user/{user_id}/create/video/{type}
           method: get
+          # request:
+          #   template:
+          #     application/json: '{ "type" : "$input.params(''bar'')" }'
+          response:
+            headers:
+              Content-Type: "'binary/octet-stream'"
+            contentHandling: CONVERT_TO_BINARY

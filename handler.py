@@ -110,7 +110,7 @@ def create_picture():
 
     # 今日の緊急
     line_pos = line_pos + 150
-    header2 = str(events_data1[0]['Month']) + '/' + str(events_data1[0]['Date']) + 'のイベント'
+    header2 = str(events_data1[0]['Month']) + '/' + str(events_data1[0]['Date']) + 'の緊急クエスト'
     add_text_to_image(image,header2,'./font/f910-shin-comic-2.04.otf',56,textRGB,line_pos,20,20000)
     
     for i in range(len(events_data1)):
@@ -122,7 +122,7 @@ def create_picture():
 
     # 明日の緊急
     line_pos = line_pos + 150
-    header3 = str(events_data2[0]['Month']) + '/' + str(events_data2[0]['Date']) + 'のイベント'
+    header3 = str(events_data2[0]['Month']) + '/' + str(events_data2[0]['Date']) + 'の緊急クエスト'
     add_text_to_image(image,header3,'./font/f910-shin-comic-2.04.otf',56,textRGB,line_pos,20,20000)
     
     for i in range(len(events_data2)):
