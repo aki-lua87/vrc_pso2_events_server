@@ -4,14 +4,14 @@ frameworkVersion: '2'
 
 plugins:
   - serverless-python-requirements
-
 custom:
   s3_bucket: ${env:S3_PUBLIC_BUCKET}
   pythonRequirements:
     dockerizePip: true
-    dockerImage: lambci/lambda:build-python3.7
+    dockerImage: lambci/lambda:build-python3.8
     useStaticCache: false
     useDownloadCache: false
+    zip: true
 
 provider:
   name: aws
@@ -42,8 +42,9 @@ functions:
     environment:
       S3_PUBLIC_BUCKET: ${self:custom.s3_bucket}
     events:
-      - schedule: cron(31 7 ? * WED *)
-      - schedule: cron(6 15 ? * * *)
+      # 予告緊急終了のため
+      # - schedule: cron(31 7 ? * WED *)
+      # - schedule: cron(6 15 ? * * *)
   video:
     handler: video_list.main
     memorySize: 3008

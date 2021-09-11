@@ -10,6 +10,11 @@ from PIL import Image,ImageFont, ImageDraw
 import boto3
 import base64
 
+try:
+    import unzip_requirements
+except ImportError:
+    pass
+
 # メタ情報
 frame_size = -1
 frame_rate = 30.0
@@ -110,19 +115,19 @@ def create_picture(user_id,video_list):
         return
     print(video_list)
     line_pos = line_pos + 20
-    font_size = 36
-    str_max_count = 50
+    font_size = 34
+    str_max_count = 62
     for i in range(len(video_list)):
-        line_pos = line_pos + 55
+        line_pos = line_pos + 50
         description = video_list[i]['description']
         text =  f'{i+1}: ' + description
         # 文字数が横枠超えそうなとき(かなり横着だけどこれ以上越えるのはもう知らん)
         if len(text) > str_max_count:
-            add_text_to_image(image,text[:str_max_count],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
-            line_pos = line_pos + 36
-            add_text_to_image(image,'    '+text[str_max_count:],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
+            add_text_to_image(image,text[:str_max_count],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,90,20000)
+            line_pos = line_pos + 35
+            add_text_to_image(image,'    '+text[str_max_count:],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,95,20000)
             continue
-        add_text_to_image(image,text,'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,100,20000)
+        add_text_to_image(image,text,'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,90,20000)
 
     # 画像を保存
     image.save(imege_path)

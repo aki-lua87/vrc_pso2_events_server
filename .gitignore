@@ -26,3 +26,4 @@ font/
 node_modules/
 .env
 memo.txt
+test/
