@@ -10,11 +10,6 @@ from PIL import Image,ImageFont, ImageDraw
 import boto3
 import base64
 
-try:
-    import unzip_requirements
-except ImportError:
-    pass
-
 # メタ情報
 frame_size = -1
 frame_rate = 30.0
