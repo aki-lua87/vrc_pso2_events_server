@@ -43,7 +43,7 @@ def main(event, context):
     
     # 動画をS3に保存
     body = getLocalVideo(local_video_path)
-    put_s3(s3_bucket,local_video_path)
+    put_s3(s3_bucket,local_video_path,'yt/channel/'+channel_id+'.mp4')
 
     # 実行時間出力
     elapsed_time = time.time() - start
@@ -75,10 +75,10 @@ def add_text_to_image(img, text, font_path, font_size, font_color, height, width
     draw.text(position, text, font_color, font=font)
     return img
 
-def put_s3(bucket_name,file,channel_id):
+def put_s3(bucket_name,local_file_path, s3_path):
     print('put_s3')
     bucket = s3.Bucket(bucket_name)
-    bucket.upload_file(file, 'yt/channel/'+channel_id+'.mp4')
+    bucket.upload_file(local_file_path, s3_path)
 
 def create_picture(video_list):
     image = Image.open('./images/template169.jpg')
