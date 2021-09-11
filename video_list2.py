@@ -22,34 +22,26 @@ width = 1920
 height = 1080
 textRGB = (0, 0, 0)
 
-
-
 # ローカル時にはプレフィックスに"."を付けてもろて
 locate_setting = ''
 imege_path = locate_setting+"/tmp/video.png"
 video_path = locate_setting+"/tmp/video.mp4"
 api_url = "https://vrc.akakitune87.net"
 
+s3 = boto3.resource('s3')
+s3_bucket = os.environ['S3_PUBLIC_BUCKET']
+
 # Lambdaエントリポイント
 def main(event, context):
     print(event)
-    user_id = event['path'].get('user_id')
-    create_type = event['path'].get('type')
-    # queryStringParameters = event.get('queryStringParameters')
-    # create_type = ''
-    # if not queryStringParameters == None:
-    #     create_type = queryStringParameters.get('type')
+    channel_id = event['path'].get('channel_id')
     # 実行時間計測
     start = time.time()
 
     # 画像を生成
-    if create_type == 'current':
-        video_list = get_video_list_current(user_id)
-        s3_path = 'current.mp4'
-    elif create_type == 'list':
-        video_list = get_video_list(user_id)
-        s3_path = 'video.mp4'
-    create_picture(user_id,video_list)
+    video_list = get_video_list(channel_id)
+    s3_path = 'video.mp4'
+    create_picture(channel_id,video_list)
 
     # 画像から動画を作成
     create_one_frame_video(imege_path,video_path)
@@ -61,16 +53,8 @@ def main(event, context):
     elapsed_time = time.time() - start
     print ('{0}'.format(elapsed_time) + '[sec]')
     body = getLocalVideo()
-    # body = getS3Video(f'{user_id}/{s3_path}',s3_bucket)
     return base64.b64encode(body)
-    # {
-    #         'statusCode': 200,
-    #         'headers': { 
-    #             "Content-type": "text/html",
-    #             "Access-Control-Allow-Origin": "*"
-    #         },
-    #         'body': body
-    # }
+
 
 def create_one_frame_video(input_imege,output_video):
     # OpenCV設定
@@ -140,15 +124,6 @@ def get_video_list(user_id):
     print(body)
     return json.loads(body)
 
-def get_video_list_current(user_id):
-    path = f'/users/{user_id}/video/current/list'
-    url = api_url +path
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as res:
-        body = res.read().decode('utf-8')
-    print(body)
-    return json.loads(body)
-
 def getLocalVideo():
     with open(video_path, 'rb') as f:
         res= f.read()
@@ -161,3 +136,15 @@ def getS3Video(path,bucket_name):
     response = obj.get()    
     body = response['Body'].read()
     return body
+
+def GetVideoList(channel_id):
+    response = table.get_item(
+        Key={
+            'user_id': 'list_yt_ch',
+            'video_id': f'{channel_id}',
+        }
+    )
+    record = response.get('Item')
+    if record == None:
+        return None
+    return record
