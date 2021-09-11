@@ -4,7 +4,7 @@ phases:
   install:
     runtime-versions:
       nodejs: 12
-      python: 3.8
+      python: 3.7
     commands:
       - yarn --version
       - yarn global add serverless
@@ -12,8 +12,6 @@ phases:
       - sls plugin install -n serverless-python-requirements
       - pip install --upgrade pip
       - pip install -r requirements.txt
-      - pip install opencv-python
-      - pip install Pillow
   build:
     commands:
       - serverless deploy
