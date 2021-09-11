@@ -22,7 +22,7 @@ var/
 *.png
 *.mp4
 _test.py
-font/
+# font/
 node_modules/
 .env
 memo.txt
