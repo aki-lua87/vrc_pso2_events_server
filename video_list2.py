@@ -43,7 +43,7 @@ def main(event, context):
     
     # 動画をS3に保存
     body = getLocalVideo(local_video_path)
-    put_s3(s3_bucket,body,channel_id)
+    put_s3(s3_bucket,local_video_path)
 
     # 実行時間出力
     elapsed_time = time.time() - start
