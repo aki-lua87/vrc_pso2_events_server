@@ -22,7 +22,8 @@ width = 1920
 height = 1080
 textRGB = (0, 0, 0)
 
-
+s3 = boto3.resource('s3')
+s3_bucket = os.environ['S3_PUBLIC_BUCKET']
 
 # ローカル時にはプレフィックスに"."を付けてもろて
 locate_setting = ''

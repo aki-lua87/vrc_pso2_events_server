@@ -1,19 +1,9 @@
 import cv2
-import glob
 import os
-import shutil
 import time
-import urllib.request
-import json
-import datetime
 from PIL import Image,ImageFont, ImageDraw
 import boto3
 import base64
-
-try:
-    import unzip_requirements
-except ImportError:
-    pass
 
 # メタ情報
 frame_size = -1
@@ -24,12 +14,16 @@ textRGB = (0, 0, 0)
 
 # ローカル時にはプレフィックスに"."を付けてもろて
 locate_setting = ''
-imege_path = locate_setting+"/tmp/video.png"
-video_path = locate_setting+"/tmp/video.mp4"
+local_imege_path = locate_setting+"/tmp/video.png"
+local_video_path = locate_setting+"/tmp/video.mp4"
 api_url = "https://vrc.akakitune87.net"
 
 s3 = boto3.resource('s3')
 s3_bucket = os.environ['S3_PUBLIC_BUCKET']
+dynamodb = boto3.resource('dynamodb')
+table    = dynamodb.Table(os.environ['VRC_VIDEO_TABLE'])
+
+# 'yt/channel/'+channel_id+'.mp4'
 
 # Lambdaエントリポイント
 def main(event, context):
@@ -38,23 +32,23 @@ def main(event, context):
     # 実行時間計測
     start = time.time()
 
+    # Video取得
+    videos = getVideoURLList(channel_id)
+
     # 画像を生成
-    video_list = get_video_list(channel_id)
-    s3_path = 'video.mp4'
-    create_picture(channel_id,video_list)
+    create_picture(channel_id,videos)
 
     # 画像から動画を作成
-    create_one_frame_video(imege_path,video_path)
+    create_one_frame_video(local_imege_path,local_video_path)
     
     # 動画をS3に保存
-    put_s3(s3_bucket,s3_path,video_path,user_id)
+    body = getLocalVideo(local_video_path)
+    put_s3(s3_bucket,body,channel_id)
 
     # 実行時間出力
     elapsed_time = time.time() - start
     print ('{0}'.format(elapsed_time) + '[sec]')
-    body = getLocalVideo()
     return base64.b64encode(body)
-
 
 def create_one_frame_video(input_imege,output_video):
     # OpenCV設定
@@ -81,12 +75,12 @@ def add_text_to_image(img, text, font_path, font_size, font_color, height, width
     draw.text(position, text, font_color, font=font)
     return img
 
-def put_s3(bucket_name,path,file,user_id):
+def put_s3(bucket_name,file,channel_id):
     print('put_s3')
     bucket = s3.Bucket(bucket_name)
-    bucket.upload_file(file, user_id+'/'+path)
+    bucket.upload_file(file, 'yt/channel/'+channel_id+'.mp4')
 
-def create_picture(user_id,video_list):
+def create_picture(video_list):
     image = Image.open('./images/template169.jpg')
 
     header1 = '現在のプレイリストの動画'
@@ -113,29 +107,12 @@ def create_picture(user_id,video_list):
         add_text_to_image(image,text,'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,90,20000)
 
     # 画像を保存
-    image.save(imege_path)
+    image.save(local_imege_path)
 
-def get_video_list(user_id):
-    path = f'/users/{user_id}/video/all'
-    url = api_url +path
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as res:
-        body = res.read().decode('utf-8')
-    print(body)
-    return json.loads(body)
-
-def getLocalVideo():
-    with open(video_path, 'rb') as f:
+def getLocalVideo(path):
+    with open(path, 'rb') as f:
         res= f.read()
     return res
-
-def getS3Video(path,bucket_name):
-    print('getS3Video',path,bucket_name)
-    bucket = s3.Bucket(bucket_name)
-    obj = bucket.Object(path)
-    response = obj.get()    
-    body = response['Body'].read()
-    return body
 
 def GetVideoList(channel_id):
     response = table.get_item(
@@ -148,3 +125,15 @@ def GetVideoList(channel_id):
     if record == None:
         return None
     return record
+
+# channel動画一覧を取得
+def getVideoURLList(channel_id):
+    # Videoのlistを取得
+    v_list = GetVideoList(channel_id)
+    if v_list == None:
+        return None
+    res = []
+    for i in range(len(v_list['urls'])):
+        res.append({'urls': v_list['urls'][i],
+            'titles': v_list['titles'][i]})
+    return res
