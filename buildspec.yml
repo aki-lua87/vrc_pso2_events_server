@@ -12,6 +12,8 @@ phases:
       - sls plugin install -n serverless-python-requirements
       - pip install --upgrade pip
       - pip install -r requirements.txt
+      - pip show opencv-python
+      - pip show Pillow
   build:
     commands:
       - serverless deploy

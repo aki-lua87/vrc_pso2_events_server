@@ -1,9 +1,9 @@
-import cv2
 import os
 import time
 from PIL import Image,ImageFont, ImageDraw
 import boto3
 import base64
+import cv2
 
 # メタ情報
 frame_size = -1
@@ -36,7 +36,7 @@ def main(event, context):
     videos = getVideoURLList(channel_id)
 
     # 画像を生成
-    create_picture(channel_id,videos)
+    create_picture(videos)
 
     # 画像から動画を作成
     create_one_frame_video(local_imege_path,local_video_path)
