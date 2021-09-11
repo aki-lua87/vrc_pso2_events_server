@@ -96,8 +96,8 @@ def create_picture(video_list):
     str_max_count = 62
     for i in range(len(video_list)):
         line_pos = line_pos + 50
-        description = video_list[i]['description']
-        text =  f'{i+1}: ' + description
+        titles = video_list[i]['titles']
+        text =  f'{i+1}: ' + titles
         # 文字数が横枠超えそうなとき(かなり横着だけどこれ以上越えるのはもう知らん)
         if len(text) > str_max_count:
             add_text_to_image(image,text[:str_max_count],'./font/f910-shin-comic-2.04.otf',font_size,textRGB,line_pos,90,20000)
