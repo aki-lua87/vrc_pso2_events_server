@@ -1,6 +1,6 @@
 service: vrc-pso2-poster
 
-frameworkVersion: '2'
+frameworkVersion: "2"
 
 plugins:
   - serverless-python-requirements
@@ -24,6 +24,7 @@ package:
   exclude:
     - node_modules/**
     - unity/**
+    - python/**
     - test.py
     - .gitignore
     - package-lock.json
