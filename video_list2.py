@@ -7,7 +7,7 @@ import cv2
 
 # メタ情報
 frame_size = -1
-frame_rate = 20.0
+frame_rate = 2.0
 width = 1920
 height = 1080
 textRGB = (0, 0, 0)
@@ -35,17 +35,17 @@ def main(event, context):
     start = time.time()
 
     # Video取得
-    videos = getVideoURLList(channel_id)
+    videos, auther = getVideoURLList(channel_id)
 
     # 画像を生成
-    create_picture(videos)
+    create_picture(videos, auther)
 
     # 画像から動画を作成
     create_one_frame_video(local_imege_path, local_video_path)
 
     # 動画をS3に保存
     body = getLocalVideo(local_video_path)
-    put_s3(s3_bucket, local_video_path, 'yt/channel/'+channel_id+'.mp4')
+    put_s3(s3_bucket, local_video_path, 'yt/list/'+channel_id+'.mp4')
 
     # 実行時間出力
     elapsed_time = time.time() - start
@@ -58,7 +58,7 @@ def create_one_frame_video(input_imege, output_video):
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     video = cv2.VideoWriter(output_video, fourcc, frame_rate, (width, height))
 
-    for idx in range(300):
+    for idx in range(20):
         # イメージデータの領域確保
         img = cv2.imread(input_imege)
         img = cv2.resize(img, (width, height))
@@ -92,21 +92,21 @@ def put_s3(bucket_name, local_file_path, s3_path):
     bucket.upload_file(local_file_path, s3_path)
 
 
-def create_picture(video_list):
+def create_picture(video_list, auther):
     image = Image.open('./images/template169.jpg')
 
-    header1 = '現在のプレイリストの動画'
+    header1 = f'現在の {auther} の動画'
 
-    line_pos = 5
+    line_pos = 7
     add_text_to_image(image, header1, './font/f910-shin-comic-2.04.otf',
-                      75, textRGB, line_pos, 125, 20000)
+                      60, textRGB, line_pos, 125, 20000)
     if len(video_list) == 0:
         print('[INFO] No Video data')
         return
     print(video_list)
-    line_pos = line_pos + 20
-    font_size = 34
-    str_max_count = 62
+    line_pos = line_pos + 25
+    font_size = 30
+    str_max_count = 1000
     for i in range(len(video_list)):
         line_pos = line_pos + 50
         titles = video_list[i]['titles']
@@ -156,4 +156,4 @@ def getVideoURLList(channel_id):
     for i in range(len(v_list['urls'])):
         res.append({'urls': v_list['urls'][i],
                     'titles': v_list['titles'][i]})
-    return res
+    return res, v_list['auther']
